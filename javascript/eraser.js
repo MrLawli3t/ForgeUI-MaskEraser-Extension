@@ -1,3 +1,23 @@
+function startErasing(canvas, eraserBtn) {
+    if (canvas === null || eraserBtn === null) return;
+
+    const ctx = canvas.getContext('2d');
+
+    eraserBtn.style.border = "2px solid red";
+
+    ctx.globalCompositeOperation = "destination-out";
+}
+
+function stopErasing(canvas, eraserBtn) {
+    if (canvas === null || eraserBtn === null) return;
+
+    const ctx = canvas.getContext('2d');
+
+    eraserBtn.style.border = "none";
+
+    ctx.globalCompositeOperation = "source-over";
+}
+
 function createEraserButton(isReforge = false) {
     const eraserBtn = document.createElement('button');
     eraserBtn.innerText = '🧼';
@@ -5,6 +25,26 @@ function createEraserButton(isReforge = false) {
     eraserBtn.class = "forge-btn";
 
     let erasing = false;
+
+    window.addEventListener("keydown", (e) => {
+        if (e.shiftKey) {
+            if (erasing) return;
+            e.preventDefault();
+            startErasing(isReforge ? document.querySelector("#img2img_inpaint_tab").querySelector("canvas[key='mask']") : document.querySelector("#img2img_inpaint_tab").querySelector("canvas"), eraserBtn);
+            erasing = true;
+        }
+    });
+
+    window.addEventListener("keyup", (e) => {
+        if (e.key === "Shift") {
+            if (!erasing) return;
+            e.preventDefault();
+            stopErasing(isReforge 
+                ? document.querySelector("#img2img_inpaint_tab").querySelector("canvas[key='mask']") 
+                : document.querySelector("#img2img_inpaint_tab").querySelector("canvas"), eraserBtn);
+            erasing = false;
+        }
+    });
 
     eraserBtn.onmouseover = () => { 
         eraserBtn.style.opacity = 0.7;
@@ -21,17 +61,9 @@ function createEraserButton(isReforge = false) {
         } else {
             canvas = parent.querySelector("canvas");
         }
-        
-        const ctx = canvas.getContext('2d');
+
         erasing = !erasing;
-
-        if (erasing) {
-            eraserBtn.style.border = "2px solid red";
-        } else {
-            eraserBtn.style.border = "none";
-        }
-
-        ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+        if (erasing) startErasing(canvas, eraserBtn); else stopErasing(canvas, eraserBtn);
     }
 
     return eraserBtn;
